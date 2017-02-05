@@ -1,0 +1,312 @@
+#Analyze facebook dataset
+
+getwd()
+
+setwd(dir ='Rstudio/')
+
+#The read.delim() function defaults to the tab character as the separator
+facebook <-read.delim('pseudo_facebook.tsv') 
+names(facebook)
+
+#Histogram 
+library(ggplot2)
+ggplot(aes(x = facebook$dob_day),data = facebook)+geom_histogram(binwidth = 1)+scale_x_continuous(breaks = 0:1000)+facet_wrap(~dob_month,ncol = 4)
+
+ggplot(aes(x=friend_count),data=subset(facebook, !is.na(gender)))+geom_histogram(binwidth = 25)+scale_x_continuous(limits = c(0,1000),breaks = seq(0,1000,100))+facet_wrap(~gender)
+
+table(facebook$gender)
+by(facebook$friend_count,facebook$gender,summary)
+
+
+ggplot(aes(x = tenure/365),data = facebook+geom_histogram(binwidth = 10,color='black',fill='#099DD9')
+
+qplot(x = tenure/365,data = facebook,color=I('black'),fill=I('#FFFF00'),binwidth=1)+scale_x_continuous(breaks=seq(0,7,0.5),lim= c(0,7))
+qplot(x=age,data = facebook,color=I('black'),fill=I('#FFFF00'),binwidth=10)+scale_x_continuous(breaks = seq(0,113,3))
+
+
+summary(facebook$friend_count)
+summary(log10(facebook$friend_count+1))
+summary(sqrt(facebook$friend_count))
+
+p1<-qplot(x =friend_count,data = facebook )
+p2<-qplot(x = log10(facebook$friend_count+1),data = facebook)
+p3<-qplot(x=sqrt(facebook$friend_count),data = facebook)
+
+grid.arrange(p1,p2,p3,ncol=1)
+
+qplot(x =friend_count,data = facebook )+scale_x_log10()
+
+#frequency polygon
+library(ggplot2)
+qplot(x =friend_count,y = ..count../sum(..count..),
+      xlab = 'Friend Count', 
+      ylab = 'porporation of users with that friend count',
+      data =subset(facebook,!is.na(gender)),binwidth=10, geom = 'freqpoly',color=gender )+scale_x_continuous(lim=c(0,1000),breaks = seq(0,1000,50))
+
+names(facebook)
+
+qplot(x = www_likes,data = subset(facebook,!is.na(gender)),geom = 'freqpoly',color=gender)+scale_x_continuous()+scale_x_log10()
+
+table(facebook$gender)
+by(facebook$www_likes,facebook$gender,sum)
+
+
+#box plot 
+qplot(x = gender,y = friend_count,
+      data = subset(facebook,!is.na(gender)),
+      geom = 'boxplot',
+      ylim=c(0,250))
+
+p1<-qplot(x = gender,y = friend_count,
+      data = subset(facebook,!is.na(gender)),
+      geom = 'boxplot')+
+      scale_y_continuous(lim=c(0,250))
+
+qplot(x = gender,y = friend_count,
+      data = subset(facebook,!is.na(gender)),
+      geom = 'boxplot')+
+      coord_cartesian(ylim =c(0,250))
+
+grid.arrange(p1,p2,ncol=1)
+
+by(facebook$friendships_initiated,facebook$gender,summary)
+by(facebook$friendships_initiated,facebook$gender,sum)
+
+#getting logical 
+summary(facebook$mobile_likes)
+
+facebook$mobile_check_in<-ifelse(facebook$mobile_likes>0,1,0)  #if else 
+facebook$mobile_check_in<-factor(facebook$mobile_check_in)     #factor 
+summary(facebook$mobile_check_in)
+
+#check the frequency 
+
+sum(facebook$mobile_check_in==1)/length(facebook$mobile_check_in)
+sum(facebook$mobile_check_in==1)
+
+
+#scatter plot 
+qplot(x = age,y = friend_count,data = facebook)
+qplot(age,friend_count,data = facebook)
+
+ggplot(aes(x=age,y = friend_count),data = facebook)+
+  geom_point(alpha=1/20)+
+  xlim(13,90)+
+  coord_trans(y ="sqrt")
+
+ggplot(aes(x=age,y = friend_count),data = facebook)+
+  geom_jitter(alpha=1/20)+
+  xlim(13,90)
+  
+  
+ggplot(aes(x=age,y = friendships_initiated),data = facebook)+geom_point(alpha=1/10)
+
+ggplot(aes(x=age,y = friendships_initiated),data = facebook)+
+  geom_jitter(alpha=1/10,position=position_jitter(h=0))+
+  coord_trans(y ="sqrt")
+
+#conditional means 
+library(dplyr)
+age_groups<- group_by(facebook,age)
+fc_by_age<-summarise(age_groups,
+                     friend_count_mean=mean(friend_count),
+                     friend_count_median=median(friend_count),
+                     n=n())
+fc_by_age<-arrange(fc_by_age,age)
+
+head(fc_by_age,20)
+
+ggplot(aes(x=age,y = friend_count_mean),data = fc_by_age)+geom_point()
+ggplot(aes(x=age,y = friend_count_mean),data = fc_by_age)+geom_line()
+
+ggplot(aes(x=age,y = friendships_initiated),data = facebook)+
+  geom_jitter(alpha=1/10,position=position_jitter(h=0),color='orange')+
+  coord_trans(y ="sqrt")+
+  geom_line(stat='summary',fun.y=mean)+
+  geom_line(stat = 'summary', fun.y = quantile, fun.args=list(probs=0.1),linetype=2,color='blue')+
+  geom_line(stat = 'summary', fun.y = quantile, fun.args=list(probs=0.5),linetype=2,color='blue')+
+  coord_cartesian(xlim=c(13,70),ylim =c(0,1000))
+
+  
+#additional Noise
+
+# Create a new variable, 'age_with_months', in the 'pf' data frame.
+# Be sure to save the variable in the data frame rather than creating
+# a separate, stand-alone variable. You will need to use the variables
+# 'age' and 'dob_month' to create the variable 'age_with_months'.
+# Assume the reference date for calculating age is December 31, 2013.
+
+ggplot(aes(x=age, y=friend_count_mean),data = fc_by_age)+geom_line()
+
+head(fc_by_age,20)
+fc_by_age[17:19,]
+
+
+age_groups<- group_by(facebook,age)
+fc_by_age<-summarise(age_groups,
+                     friend_count_mean=mean(friend_count),
+                     friend_count_median=median(friend_count),
+                     n=n())
+fc_by_age<-arrange(fc_by_age,age)
+
+head(fc_by_age,20)
+
+facebook$age_with_months <- facebook$age + (1 - facebook$dob_month / 12)
+head(facebook$age_with_months)
+  
+  
+
+#calculation correlation coefficient
+cor.test(facebook$age,facebook$friend_count,method = 'pearson')
+with(subset(facebook,age<=70),cor.test(age,friend_count,method = 'pearson'))
+
+names(facebook)
+ggplot(aes(x=www_likes_received,y=likes_received),data = facebook)+
+  geom_point()+
+  xlim(0,quantile(facebook$www_likes_received,0.95))+
+  ylim(0,quantile(facebook$likes_received,0.95))+
+  geom_smooth(method = 'lm',color='red')
+
+with(facebook,cor.test(www_likes_received,likes_received))
+
+#more caution with correlation
+install.packages('alr3')
+library(alr3)
+data(Mitchell)
+
+
+# Create a scatterplot of temperature (Temp) vs. months (Month).
+summary(Mitchell)
+
+ggplot(aes(x=Month,y = Temp),data=Mitchell)+
+  geom_line()+
+  scale_x_discrete(breaks=seq(0,203,11))
+
+
+with(Mitchell,cor.test(Month,Temp))
+
+
+#explore multivariate data 
+#Third quantatitive Variable 
+
+ggplot(aes(x=gender,y=age),data = subset(facebook,!is.na(gender)))+
+  geom_boxplot()+
+  stat_summary(fun.y = mean,geom = 'point',shape=4)
+
+ggplot(aes(x=age,y=friend_count),data = subset(facebook,!is.na(gender)))+
+  geom_line(aes(color=gender),stat='summary',fun.y=mean)
+
+# Write code to create a new data frame,
+# called 'pf.fc_by_age_gender', that contains
+# information on each age AND gender group.
+
+# The data frame should contain the following variables:
+
+#    mean_friend_count,
+#    median_friend_count,
+#    n (the number of users in each age and gender grouping)
+
+
+library(dplyr)
+age_gender_groups<-group_by(subset(facebook,!is.na(gender)),age,gender)
+
+fc_by_age_gender<-summarise(age_gender_groups,
+                     friend_count_mean=mean(friend_count),
+                     friend_count_median=median(friend_count),
+                     n=n())
+head(fc_by_age_gender)
+
+### Reshaping Data
+
+install.packages('reshape2')
+library(reshape2)
+
+fc_by_age_gender.wide<-dcast(fc_by_age_gender,age~gender,value.var ='friend_count_median')
+
+head(fc_by_age_gender.wide)
+
+# Plot the ratio of the female to male median
+# friend counts using the data frame
+# pf.fc_by_age_gender.wide.
+  
+ggplot(aes(x=age,y=female/male),data = fc_by_age_gender.wide)+geom_line()+geom_hline(yintercept=1,linetype=2)
+
+# Create a variable called year_joined
+# in the pf data frame using the variable
+# tenure and 2014 as the reference year.
+# The variable year joined should contain the year
+# that a user joined facebook.
+
+facebook$year_joined<-floor(2014-facebook$tenure/365)
+
+summary(facebook$year_joined)
+table(facebook$year_joined)
+
+# Create a new variable in the data frame
+# called year_joined.bucket by using
+# the cut function on the variable year_joined.
+
+# You need to create the following buckets for the
+# new variable, year_joined.bucket
+
+#        (2004, 2009]
+#        (2009, 2011]
+#        (2011, 2012]
+#        (2012, 2014]
+
+facebook$year_joined.bucket <- cut(facebook$year_joined,c(2004,2009,2011,2012,2014))
+
+table(facebook$year_joined.bucket)
+
+# Create a line graph of friend_count vs. age
+# so that each year_joined.bucket is a line
+# tracking the median user friend_count across
+# age. This means you should have four different
+# lines on your plot.
+
+# You should subset the data to exclude the users
+# whose year_joined.bucket is NA.
+
+ggplot(aes(x=age,y=friend_count),data = subset(facebook,!is.na(year_joined.bucket)))+
+  geom_line(aes(color=year_joined.bucket),stat='summary',fun.y=median)
+
+# Write code to do the following:
+
+# (1) Add another geom_line to code below
+# to plot the grand mean of the friend count vs age.
+# (2) Exclude any users whose year_joined.bucket is NA.
+# (3) Use a different line type for the grand mean.
+
+ggplot(aes(x=age,y=friend_count),data = subset(facebook,!is.na(year_joined.bucket)))+
+  geom_line(aes(color=year_joined.bucket),stat='summary',fun.y=mean)+
+  geom_line(stat='summary',fun.y=mean,linetype=2) #grand_mean
+
+
+#Friending Rate Solution
+with(subset(facebook,tenure>=1),summary(friend_count/tenure))
+  
+
+# Create a line graph of mean of friendships_initiated per day (of tenure)
+# vs. tenure colored by year_joined.bucket.
+
+# You need to make use of the variables tenure,
+# friendships_initiated, and year_joined.bucket.
+
+# You also need to subset the data to only consider user with at least
+# one day of tenure.
+
+ggplot(aes(x=tenure,y=friendships_initiated/tenure),data = subset(facebook,tenure>=1))+
+  geom_line(aes(color=year_joined.bucket),stat='summary',fun.y=mean)
+
+#smooother
+ggplot(aes(x=7 * round(tenure / 7),y=friendships_initiated/tenure),data = subset(facebook,tenure>=1))+
+  geom_line(aes(color=year_joined.bucket),stat='summary',fun.y=mean)
+
+ggplot(aes(x=30 * round(tenure / 30),y=friendships_initiated/tenure),data = subset(facebook,tenure>=1))+
+  geom_line(aes(color=year_joined.bucket),stat='summary',fun.y=mean)
+
+# Instead of geom_line(), use geom_smooth() to add a smoother to the plot.
+
+ggplot(aes(x=tenure,y=friendships_initiated/tenure),data = subset(facebook,tenure>=1))+
+  geom_smooth(aes(color=year_joined.bucket))
+
