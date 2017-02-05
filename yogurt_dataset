@@ -1,0 +1,53 @@
+#yogurt dataset
+
+getwd()
+setwd(dir ='Rstudio/')
+yogurt <-read.csv('yogurt.csv') 
+summary(yogurt)
+str(yogurt)
+
+#change id from int to factor
+yogurt$id<-factor(yogurt$id)
+str(yogurt)
+
+#Histrgorams 
+library(ggplot2)
+qplot(x=price,data = yogurt)
+
+ggplot(aes(x=price),data=yogurt)+geom_histogram(binwidth=1)
+
+
+unique(yogurt$price)
+length(unique(yogurt$price))
+table(yogurt$price)
+str(yogurt)
+
+
+# Create a new variable called all.purchases,
+# which gives the total counts of yogurt for
+# each observation or household.
+
+yogurt<-transform(yogurt,all.purchase=strawberry+blueberry+pina.colada+plain+mixed.berry)
+
+yogurt$all.purchase<-yogurt$strawberry+yogurt$blueberry+yogurt$pina.colada+yogurt$plain+yogurt$mixed.berry
+
+ggplot(aes(x=all.purchase),data=yogurt)+geom_histogram(binwidth=1)
+
+# Create a scatterplot of price vs time.
+
+ggplot(aes(x=time,y=price),data=yogurt)+geom_point()
+
+#looking at Samples of Households 
+set.seed(4230)
+
+sample.ids<-sample(levels(yogurt$id),16)
+
+ggplot(aes(x=time,y=price),data=subset(yogurt,id %in% sample.ids))+
+  facet_wrap(~id)+
+  geom_line()+
+  geom_point(aes(size=all.purchase),pch=1)
+
+#scatterplot Matrices 
+
+  
+
